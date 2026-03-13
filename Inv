@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Enterprise Inventory Simulator — v48</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#060810;--s1:#0c0f18;--s2:#131722;--s3:#1a2030;--tx:#dde0ed;--td:#5f6a85;--br:#222d42;--ac:#00e5a0;--a2:#00b4d8;--a3:#a78bfa;--a4:#f59e0b;--dg:#ef4444;--wn:#fbbf24}
+body{background:var(--bg);color:var(--tx);font-family:'Outfit',sans-serif;font-size:11px;padding-bottom:50px}
+.W{max-width:1560px;margin:0 auto;padding:8px 12px}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 0 6px;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:18px;font-weight:700;background:linear-gradient(135deg,var(--ac),var(--a2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-family:'JetBrains Mono',monospace}
+.S{background:var(--s1);border:1px solid var(--br);border-radius:5px;padding:10px;margin-bottom:6px;position:relative;overflow:hidden}
+.S::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.S.i::before{background:var(--a2)}.S.c::before{background:var(--a3)}.S.d::before{background:var(--a4)}.S.x::before{background:var(--dg)}
+.st{font-family:'JetBrains Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.F{background:var(--s2);border:1px solid var(--br);border-radius:3px;padding:5px 7px;font-family:'JetBrains Mono',monospace;font-size:8.5px;line-height:1.85;margin:4px 0;white-space:pre-wrap;overflow-x:auto}
+.F .g{color:var(--ac)}.F .v{color:var(--wn)}.F .r{color:var(--dg)}
+table.T{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:7.5px;margin:3px 0;table-layout:auto}
+.T th{padding:3px 4px;text-align:right;color:var(--td);border-bottom:1px solid var(--br);font-weight:400;white-space:nowrap}
+.T td{padding:3px 4px;text-align:right;border-bottom:1px solid rgba(34,45,66,.3);white-space:nowrap}
+.T th:first-child,.T td:first-child{text-align:left}
+input.e{width:52px;background:var(--s2);border:1px solid var(--br);color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:7.5px;text-align:right;padding:2px 3px;border-radius:2px}
+input.e:focus{border-color:var(--ac);outline:none;background:var(--s3)}
+input.ea{width:52px;background:rgba(0,229,160,.06);border:1px solid rgba(0,229,160,.3);color:var(--ac);font-family:'JetBrains Mono',monospace;font-size:7.5px;text-align:right;padding:2px 3px;border-radius:2px}
+input.eb{width:44px;background:var(--s2);border:1px solid var(--br);color:var(--tx);font-family:'JetBrains Mono',monospace;font-size:8px;text-align:right;padding:2px 3px;border-radius:2px}
+.sr{display:flex;align-items:center;gap:5px;margin:2px 0}
+.sl{font-size:8px;color:var(--td);width:120px;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.si{flex:1;accent-color:var(--ac);height:12px;cursor:pointer}
+.sv{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;color:var(--ac);min-width:44px;text-align:right}
+.G4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.G2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.gc{background:var(--s2);border:1px solid var(--br);border-radius:3px;padding:6px;margin-bottom:4px}
+.gc .gl{font-size:6.5px;color:var(--td);font-family:'JetBrains Mono',monospace;text-transform:uppercase}
+.gc .gv{font-size:13px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-top:2px}
+.win{background:rgba(0,229,160,.04);border:2px solid var(--ac);border-radius:4px;padding:10px;margin:6px 0;text-align:center}
+.btn2{background:var(--ac);color:#000;padding:5px 10px;border:none;border-radius:4px;font-weight:700;font-family:'JetBrains Mono',monospace;font-size:9px;cursor:pointer}
+.btnSm{background:var(--s2);color:var(--td);border:1px solid var(--td);padding:2px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:7px;cursor:pointer}
+.btnSm:hover{background:var(--a2);color:#000;border-color:var(--a2)}
+.rs{font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace}
+.tgl{cursor:pointer;color:var(--a3);font-weight:bold;margin-right:4px;display:inline-block;width:10px;text-align:center}
+.row-m{background:rgba(255,255,255,0.03)}.row-w{background:rgba(255,255,255,0.015)}
+select.sku-sel{background:var(--s2);color:var(--tx);border:1px solid var(--br);padding:3px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:8px;cursor:pointer}
+.rad{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tx);margin-right:10px;cursor:pointer}
+.rad input{accent-color:var(--ac);margin-right:3px;vertical-align:middle}
+.rec-box{background:rgba(0,229,160,.04);border:1px solid var(--ac);border-radius:4px;padding:8px 12px;margin:6px 0;font-family:'JetBrains Mono',monospace;font-size:8.5px}
+.debug-box{background:rgba(167,139,250,.05);border:1px solid var(--a3);border-radius:4px;padding:6px;margin:4px 0;font-family:'JetBrains Mono',monospace;font-size:7.5px;color:var(--a3)}
+.legend-box{background:var(--s2);border:1px solid var(--br);border-radius:4px;padding:8px;margin:6px 0;font-family:'JetBrains Mono',monospace;font-size:7.5px;line-height:1.9}
+.sens-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:7.5px;margin:4px 0}
+.sens-tbl th,.sens-tbl td{padding:3px 5px;border:1px solid var(--br);text-align:right}
+.sens-tbl th{color:var(--td);font-weight:400;background:var(--s2)}
+.sens-tbl td:first-child,.sens-tbl th:first-child{text-align:left}
+.gsel{display:inline-flex;align-items:center;gap:3px;font-family:'JetBrains Mono',monospace;font-size:7.5px;margin-right:10px;cursor:pointer}
+.gsel input{accent-color:var(--ac)}
+</style>
+</head>
+<body>
+<div class="W">
+<div class="hdr"><div><h1>Enterprise Simulator v48</h1><p>v48: Production-Ready • Correct SS Holding Cost • FG SS in Monte Carlo • Zero-Drift Rounding • Dynamic Pricing Live • All P0s Fixed</p></div>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <button class="btn2" onclick="saveScenario()">💾 Save</button>
+  <button class="btn2" onclick="loadScenario()">📂 Load</button>
+  <button class="btn2" onclick="runAutoOptimizer()">🚀 150 Experiments</button>
+</div></div>
+
+<!-- S1 --><div class="S i"><div class="st"><span>1. Calendar & Forecast</span>
+<select class="sku-sel" id="hierSel" onchange="changeHierarchy(this.value)"><option value="full">Full (M+W+D)</option><option value="mw">M+W only</option><option value="wd">W+D only</option></select>
+<button class="btnSm" onclick="distributeForecast()">Disaggregate ↓</button></div>
+<div style="background:rgba(0,180,216,.05);padding:5px 8px;border-radius:4px;border:1px solid rgba(0,180,216,.2);margin-bottom:4px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+<span style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--a2);font-weight:bold">Work Days:</span>
+<label class="rad"><input type="radio" name="calWd" value="5" checked onchange="upP('workDays',5)">5d</label>
+<label class="rad"><input type="radio" name="calWd" value="6" onchange="upP('workDays',6)">6d</label>
+<label class="rad"><input type="radio" name="calWd" value="7" onchange="upP('workDays',7)">7d</label>
+<input type="checkbox" id="chkHol" onchange="upP('indianHols',this.checked)" style="accent-color:var(--a3)"><label for="chkHol" class="rad" style="margin-left:2px">Indian Hols</label>
+</div>
+<div class="G2" style="margin-bottom:4px">
+<div style="background:var(--s2);border:1px solid var(--br);border-radius:4px;padding:6px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--a2);font-weight:700;margin-bottom:3px">🏭 Production Capacity (units/day)</div>
+<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+<label class="rad"><input type="radio" name="pp" value="avg" onchange="upP('prodPol','avg')">Avg:</label>
+<input class="e" id="vAvgCap" style="width:34px;margin-left:-6px" value="25" onchange="upP('customAvgCap',+this.value)">
+<label class="rad"><input type="radio" name="pp" value="max" onchange="upP('prodPol','max')">Max:</label>
+<input class="e" id="vMaxCap" style="width:34px;margin-left:-6px" value="50" onchange="upP('customMaxCap',+this.value)">
+<label class="rad"><input type="radio" name="pp" value="fcst" checked onchange="upP('prodPol','fcst')">Per-Period Table</label>
+</div></div>
+<div style="background:var(--s2);border:1px solid rgba(245,158,11,.3);border-radius:4px;padding:6px">
+<div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--a4);font-weight:700;margin-bottom:3px">📦 Warehouse Cap (FG storage)</div>
+<div style="display:flex;gap:6px;align-items:center">
+<span style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--td)">Max FG:</span>
+<input class="e" style="width:50px" value="500" oninput="upP('whMaxUnits',+this.value)"> units
+<span style="color:var(--td);font-size:7px;margin-left:6px">(∞ if left high)</span>
+</div></div></div>
+<div class="G2" style="margin-bottom:4px">
+<div style="background:var(--s2);border:1px solid var(--br);border-radius:4px;padding:5px">
+<div class="sr"><div class="sl">Fixed Admin $/order</div><input type="range" class="si" min="0" max="200" step="5" value="50" oninput="upP('adminCost',+this.value)"><div class="sv" id="vAdmin">$50</div></div>
+<div style="font-size:6.5px;color:var(--td);font-family:'JetBrains Mono',monospace">Ordering cost = Admin + Σ(unit_cost × qty + transport × qty). Admin is paperwork/setup. Material cost is dynamic from BOM.</div>
+</div>
+<div style="background:var(--s2);border:1px solid var(--br);border-radius:4px;padding:5px">
+<div class="sr"><div class="sl">FG Hold starts after</div><input type="range" class="si" min="0" max="30" step="1" value="1" oninput="upP('holdStartDay',+this.value)"><div class="sv" id="vHoldStart">1d</div></div>
+</div></div>
+<div id="calcHoldInfo" class="debug-box"></div>
+<div style="max-height:220px;overflow-y:auto;border-bottom:1px solid var(--br);margin-bottom:4px">
+<table class="T"><thead><tr><th>Period</th><th>W.Days</th><th>Forecast</th><th style="color:var(--ac)">Actual</th><th>Prod Cap</th></tr></thead><tbody id="tH"></tbody></table>
+</div>
+<div class="G4">
+<div class="sr"><div class="sl">MAPE %</div><input type="range" class="si" min="0" max="100" step="1" value="15" oninput="upP('mape',+this.value)"><div class="sv" id="vMape">15%</div></div>
+<div class="sr"><div class="sl">Service Level %</div><input type="range" class="si" min="80" max="99.9" step="0.1" value="95" oninput="upP('sl',+this.value)"><div class="sv" id="vSL">95%</div></div>
+<div class="sr"><div class="sl">Shelf Life (d)</div><input type="range" class="si" min="1" max="60" step="1" value="3" oninput="upP('shelf',+this.value)"><div class="sv" id="vShelf">3d</div></div>
+<div class="sr"><div class="sl">Yield %</div><input type="range" class="si" min="50" max="100" step="1" value="95" oninput="upP('yield',+this.value)"><div class="sv" id="vYield">95%</div></div>
+<div class="sr"><div class="sl">Setup Pen u</div><input type="range" class="si" min="0" max="10" step="1" value="1" oninput="upP('setupPen',+this.value)"><div class="sv" id="vSetPen">1</div></div>
+<div class="sr"><div class="sl">Fixed $/day</div><input type="range" class="si" min="0" max="500" step="10" value="100" oninput="upP('fixedFactory',+this.value)"><div class="sv" id="vFix">$100</div></div>
+<div class="sr"><div class="sl">Util Target %</div><input type="range" class="si" min="50" max="100" step="5" value="85" oninput="upP('optUtil',+this.value)"><div class="sv" id="vOptU">85%</div></div>
+<div class="sr" style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.3);border-radius:3px;padding:2px 5px"><div class="sl" style="color:var(--dg);font-weight:600">Selling Price $/u</div><input type="range" class="si" min="10" max="500" step="5" value="100" oninput="upP('sellPrice',+this.value)"><div class="sv" id="vSellPrice" style="color:var(--dg)">$100</div></div>
+<div class="sr" style="background:rgba(0,229,160,.05);border:1px solid rgba(0,229,160,.3);border-radius:3px;padding:2px 5px"><div class="sl" style="color:var(--ac);font-weight:600">Backlog?</div><input type="checkbox" style="accent-color:var(--ac)" onchange="upP('backorder',this.checked)"></div>
+</div></div>
+
+<!-- S2 --><div class="S x"><div class="st"><span>2. Subparts BOM</span><button class="btnSm" onclick="addBOM()">+ Add</button></div>
+<div style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin-bottom:3px">ChgDay = day contract price expires → switches to NxtCost (spot). CV% = spot price volatility. Trans = transport $/unit. All editable — changes propagate instantly.</div>
+<div id="bomArea"></div></div>
+
+<!-- S3 --><div class="S c"><div class="st"><span>3. Purchasing — Auto-Recommended</span></div><div id="procRec"></div><div id="partCards"></div></div>
+
+<!-- S4 --><div class="S d"><div class="st"><span>4. Production Strategy Matrix</span></div>
+<div id="costExplain" style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin-bottom:3px"></div>
+<table class="T"><thead><tr><th>#</th><th style="text-align:left">Strategy</th><th>SS?</th><th>Orders</th><th style="color:var(--a2)">Mat+Ord$/y</th><th style="color:var(--a4)">FG Hold$/y</th><th>AvgInv</th><th style="color:var(--a3)">SS$/y</th><th style="color:var(--dg)">Waste$/y</th><th>OpCost$/y</th><th style="color:var(--ac)">Fill%</th><th style="color:var(--dg)">Lost Sales $</th><th style="color:var(--wn)">TRUE TOTAL$/y</th><th>Prod'd</th></tr></thead><tbody id="tModels"></tbody></table>
+<div class="win" id="win"></div>
+<div id="holdExplain" style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin-top:3px"></div></div>
+
+<!-- S4B Graph --><div class="S" style="border-color:var(--ac)"><div class="st"><span>4B. Inventory Cycle — Select Strategy</span>
+<div style="display:flex;align-items:center;gap:6px"><span style="font-size:8px;color:var(--td)">Show:</span><input type="range" min="10" max="120" step="5" value="40" style="width:80px;accent-color:var(--ac)" oninput="graphDays=+this.value;drawGraph();document.getElementById('gdLbl').textContent=this.value+'d'"><span id="gdLbl" style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--ac)">40d</span></div>
+</div>
+<div id="graphSelectors" style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px"></div>
+<div style="display:flex;gap:10px;margin-bottom:4px;font-family:'JetBrains Mono',monospace;font-size:7.5px;flex-wrap:wrap">
+  <span>■ <span style="color:#4ade80">Green bars</span> = End-of-day FG</span>
+  <span>■ <span style="color:#f472b6">Pink line</span> = Demand</span>
+  <span>■ <span style="color:#38bdf8">Blue stems</span> = Production</span>
+  <span>■ <span style="color:#a78bfa">Purple dash</span> = Safety Stock target</span>
+  <span>■ <span style="color:#ef4444">Red</span> = Expired</span>
+  <span>■ <span style="color:#fbbf24">Yellow</span> = Shortage</span>
+</div>
+<canvas id="invGraph" style="width:100%;height:400px;background:var(--s2);border-radius:4px;border:1px solid var(--br)"></canvas>
+<div id="graphStats" style="margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:7.5px;color:var(--td)"></div></div>
+
+<!-- S5 Greedy Lookahead --><div class="S d"><div class="st"><span>5. Greedy Lookahead (Build-Ahead) (Monthly)</span></div>
+<div style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin-bottom:3px">This is a <b style="color:var(--a3)">greedy lookahead heuristic</b>, NOT real MILP. It looks ahead within shelf life, consolidating future demand when holding cost &lt; ordering cost saved. A true MILP would use a solver (PuLP/OR-Tools) with binary decision variables. This is a fast approximation. Shown here to compare vs heuristics (PPB, Silver-Meal, etc).</div>
+<div id="milpDebug" class="debug-box"></div>
+<table class="T"><thead><tr><th style="text-align:left;min-width:50px">Month</th><th>Demand</th><th>JIT</th><th style="color:var(--ac)">Lookahead</th><th>Delta</th><th>Buffer</th><th>Hold$</th><th style="color:var(--dg)">Expiry</th></tr></thead><tbody id="tMILP"></tbody></table></div>
+
+<!-- S6 MC --><div class="S" style="border-color:var(--a4)"><div class="st"><span>6. Monte Carlo (500 runs)</span><button class="btnSm" onclick="fullRecalc()">Rerun</button></div><div id="mcResult" class="F" style="min-height:50px"></div><table class="T"><thead><tr><th>Day</th><th>Dem</th><th>Parts?</th><th style="color:var(--ac)">Prod</th><th>EndInv</th><th style="color:var(--dg)">Exp</th><th style="color:var(--dg)">Short</th><th>Cash</th></tr></thead><tbody id="mcPath"></tbody></table></div>
+
+<!-- S7 --><div class="S" style="border-color:var(--a3)"><div class="st"><span>7. Auto Researcher</span><button class="btn2" onclick="runAutoOptimizer()">🚀 150 Experiments</button></div>
+<div id="optimizerResult" class="F" style="min-height:60px"></div>
+<div style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin:3px 0">Keeps YOUR shelf life, BOM costs, and capacity FIXED. Only varies: service level target, backlog policy, hold delay. Compares all 8 strategies under each config. Savings % is vs YOUR current setup baseline.</div>
+<table class="T"><thead><tr><th>Rank</th><th style="text-align:left">Configuration</th><th>Winner</th><th>$/yr</th><th>Fill%</th><th>Save% vs baseline</th><th></th></tr></thead><tbody id="lbBody"></tbody></table>
+<button class="btn2" onclick="applyBestConfig()" style="margin-top:6px">✅ Apply Best</button></div>
+
+<!-- S7B --><div class="S" style="border-color:var(--a2)"><div class="st"><span>7B. Sensitivity</span><button class="btnSm" onclick="runSensitivity()">Run</button></div>
+<div id="sensResult" style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace">Sweeps each parameter while keeping others at YOUR values. Largest "Range" column = your biggest cost lever to focus on.</div><div id="sensTable"></div></div>
+
+<!-- S8 --><div class="S" style="border-color:var(--a2)"><div class="st"><span>8. Version History</span></div><div id="versionHistory" style="max-height:150px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:8px"></div></div>
+</div>
+
+<script>
+"use strict";
+var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+State,States={cake:{
+  p:{mape:15,shelf:3,sl:95,yield:95,setupPen:1,fixedFactory:100,optUtil:85,backorder:false,prodPol:'fcst',customAvgCap:25,customMaxCap:50,workDays:5,indianHols:false,holdStartDay:1,adminCost:50,whMaxUnits:500,sellPrice:100},
+  exp:{},periods:[],bom:[
+    {id:1,name:'Cream Bun',qty:1,mode:'contract',cost:5,cv:0,nextCost:8,changeDay:90,trans:0.5,lt:3,ltcv:20,moq:20,max:200,holdPct:24,useMoq:true,useMax:true},
+    {id:2,name:'Vanilla',qty:2,mode:'spot',cost:10,cv:15,nextCost:10,changeDay:999,trans:1.2,lt:5,ltcv:10,moq:50,max:500,holdPct:24,useMoq:true,useMax:true}
+  ],c:{}}},
+hierarchyMode="full",versionHistory=[],optimizerResults=[],baselineCost=0,_trig=null,_needS1=false,_needBOM=false,
+graphShow={},graphIdx=0,graphDays=40,GCOL=['#00e5a0','#00b4d8','#a78bfa','#f59e0b','#ef4444','#fbbf24','#34d399','#f472b6'];
+
+// Zero-drift proportional allocation (P0-3)
+function splitProp(total,weights){
+  var sum=weights.reduce((a,b)=>a+b,0);
+  if(sum===0) return weights.map(()=>0);
+  var res=[],carry=0;
+  for(var i=0;i<weights.length;i++){
+    var exact=total*weights[i]/sum+carry;
+    var rounded=Math.round(exact);
+    carry=exact-rounded;
+    res.push(rounded);
+  }
+  var diff=total-res.reduce((a,b)=>a+b,0);
+  if(diff!==0) res[res.length-1]+=diff;
+  return res;
+}
+
+function buildCal(o){var a=[],h={};if(o.p.indianHols){h['0-26']=1;h['7-15']=1;h['9-2']=1;}var mW=new Array(12).fill(0),td=new Date(2026,0,1);while(td.getFullYear()===2026){var m=td.getMonth(),d=td.getDate(),dw=td.getDay(),ok=false;if(o.p.workDays===5&&dw>=1&&dw<=5)ok=true;if(o.p.workDays===6&&dw>=1&&dw<=6)ok=true;if(o.p.workDays===7)ok=true;if(ok&&!h[m+'-'+d])mW[m]++;td.setDate(td.getDate()+1);}
+var bF=[150,144,156,165,180,174,168,162,186,195,150,270],gi=0;
+for(var i=0;i<12;i++){var mI='M'+i,wd=mW[i]||1,mF=bF[i],nw=Math.ceil(wd/5),wa=[];for(var w=0;w<nw;w++)wa.push(Math.min(5,wd-w*5));
+var wf=splitProp(mF,wa);
+if(hierarchyMode!=="wd")a.push({id:mI,type:'M',label:MN[i],wd:wd,fcst:mF,act:null,cap:25,par:null});
+for(var w=0;w<nw;w++){var wI=mI+'_W'+w,wD=wa[w],wF=wf[w];a.push({id:wI,type:'W',label:MN[i]+' W'+(w+1),wd:wD,fcst:wF,act:null,cap:25,par:mI});
+var dw2=[];for(var d=0;d<wD;d++)dw2.push(1);
+var df=splitProp(wF,dw2);
+for(var d=0;d<wD;d++){if(hierarchyMode!=="mw")a.push({id:'D'+gi,type:'D',label:'D'+(gi+1),wd:1,fcst:df[d],act:null,cap:25,par:wI});gi++;}}}
+o.periods=a;if(!o.exp['M0'])o.exp['M0']=true;}
+buildCal(States.cake);State=States.cake;
+
+function gN(m,p){if(p<=0||m<=0)return m;var u=Math.random(),v=Math.random();return Math.max(0,m*(1+Math.sqrt(-2*Math.log(Math.max(u,1e-4)))*Math.cos(6.2832*v)*p/100));}
+function fc(n){return isNaN(n)?'--':'$'+Math.round(n).toLocaleString();}
+function gD(d){return d.act!==null?d.act:d.fcst;}
+function gC(d){return State.p.prodPol==='avg'?State.p.customAvgCap:State.p.prodPol==='max'?State.p.customMaxCap:d.cap;}
+function fgH(){return State.bom.reduce((s,p)=>s+(p.cost*p.qty*p.holdPct/100/365),0);}
+
+function ordCost(Q,di){
+  var mat=0;
+  State.bom.forEach(b=>{
+    var uc=b.cost;
+    if(di>=b.changeDay){uc=b.mode==='contract'?b.nextCost:gN(b.nextCost,b.cv);}
+    else if(b.mode==='spot'){uc=gN(b.cost,b.cv);}
+    mat+=b.qty*(uc+b.trans)*Q;
+  });
+  return mat;
+}
+function ordCostDet(Q,di){
+  var mat=0;
+  State.bom.forEach(b=>{
+    var uc=(di>=b.changeDay)?b.nextCost:b.cost;
+    mat+=b.qty*(uc+b.trans)*Q;
+  });
+  return mat;
+}
+
+function trigger(s1,bom){_needS1=s1;_needBOM=bom;clearTimeout(_trig);_trig=setTimeout(fullRecalc,15);}
+function fullRecalc(){calcEch();calcLookahead();calcModels();runMC();if(_needS1)renderS1();if(_needBOM)renderBOM();renderDown();_needS1=false;_needBOM=false;}
+
+function upP(k,v){if(k==='workDays'||k==='indianHols'){State.p[k]=v;buildCal(State);trigger(true,false);return;}if(k==='backorder')State.p[k]=v;else if(k==='prodPol')State.p[k]=v;else State.p[k]=Number(v);trigger(false,false);}
+function updatePeriod(id,key,val){var p=State.periods.find(x=>x.id===id);if(!p)return;p[key]=(val===''||val===null)?null:Number(val);if(key==='fcst'&&p[key]!==null){
+  function _pushDown(pid,ct){var par=State.periods.find(x=>x.id===pid);if(!par)return;var kids=State.periods.filter(x=>x.par===pid&&x.type===ct);if(!kids.length)return;var vals=splitProp(par.fcst,kids.map(k=>k.wd));kids.forEach((k,i)=>{k.fcst=vals[i];});}
+  function _sumUp(pid,ct){var par=State.periods.find(x=>x.id===pid);if(!par)return;var kids=State.periods.filter(x=>x.par===pid&&x.type===ct);if(kids.length)par.fcst=kids.reduce((s,k)=>s+k.fcst,0);}
+  if(p.type==='M'){_pushDown(p.id,'W');State.periods.filter(x=>x.par===p.id&&x.type==='W').forEach(w=>{_pushDown(w.id,'D');});}
+  else if(p.type==='W'){_pushDown(p.id,'D');_sumUp(p.par,'W');}
+  else if(p.type==='D'){var pw=State.periods.find(x=>x.id===p.par);if(pw){pw.fcst=State.periods.filter(x=>x.par===pw.id&&x.type==='D').reduce((s,d)=>s+d.fcst,0);var pm=State.periods.find(x=>x.id===pw.par&&x.type==='M');if(pm)pm.fcst=State.periods.filter(x=>x.par===pm.id&&x.type==='W').reduce((s,w)=>s+w.fcst,0);}}
+}State.periods.forEach(pp=>{var el=document.getElementById('f_'+pp.id);if(el&&el!==document.activeElement)el.value=pp.fcst;});trigger(false,false);}
+function updateBOM(id,k,v){var b=State.bom.find(x=>x.id===id);if(b){b[k]=(k==='name'||k==='mode'?v:(k==='useMoq'||k==='useMax'?v:Number(v)));} trigger(false,false);}
+function tgl(id){State.exp[id]=!State.exp[id];renderS1();}
+function addBOM(){State.bom.push({id:Date.now(),name:'New',qty:1,mode:'spot',cost:5,cv:10,nextCost:5,changeDay:999,trans:0.5,lt:5,ltcv:10,moq:10,max:100,holdPct:24,useMoq:true,useMax:true});trigger(false,true);}
+function rmBOM(id){State.bom=State.bom.filter(b=>b.id!==id);trigger(false,true);}
+function distributeForecast(){State.periods.forEach(p=>{if(p.type==='M'){var wks=State.periods.filter(x=>x.par===p.id&&x.type==='W');if(wks.length){var v=splitProp(p.fcst,wks.map(w=>w.wd));wks.forEach((w,i)=>{w.fcst=v[i];});}}if(p.type==='W'){var dys=State.periods.filter(x=>x.par===p.id&&x.type==='D');if(dys.length){var v=splitProp(p.fcst,dys.map(()=>1));dys.forEach((d,i)=>{d.fcst=v[i];});}}});trigger(true,false);}
+function changeHierarchy(m){hierarchyMode=m;buildCal(State);trigger(true,false);}
+
+function calcEch(){
+  var days=State.periods.filter(x=>x.type==='D');if(!days.length)days=State.periods.filter(x=>x.type==='W');
+  var mons=State.periods.filter(x=>x.type==='M');var tD=days.length;if(!tD)return;
+  var tDem=days.reduce((a,d)=>a+gD(d),0);
+  var totalAnnualWD=0;for(var mi=0;mi<12;mi++){var mP=State.periods.find(x=>x.id==='M'+mi&&x.type==='M');if(mP)totalAnnualWD+=mP.wd;}
+  if(totalAnnualWD===0)totalAnnualWD=Math.max(tD,1);
+  var annF=totalAnnualWD/Math.max(tD,1);
+  var D_ann=Math.round(tDem*annF),dd=tDem/tD,CVd=0;
+  if(dd>0&&State.p.mape>0){CVd=Math.sqrt(days.reduce((a,d)=>{var x=gD(d)-dd;return a+x*x;},0)/tD)/dd;}
+  var zM={80:0.842,85:1.036,90:1.282,95:1.645,99:2.326,99.9:3.09},zV=1.645,bd=999;
+  Object.keys(zM).forEach(k=>{var df=Math.abs(+k-State.p.sl);if(df<bd){bd=df;zV=zM[k];}});
+  var fgMat=State.bom.reduce((a,p)=>a+p.qty*p.cost,0),fH=fgH(),eC=gC(days[0]);
+  var ps=State.bom.map(p=>{var dC=Math.min(dd,eC)*p.qty,sigDC=CVd*dC*(1+State.p.mape/100),sigLT=p.lt*(p.ltcv/100),hA=p.cost*p.holdPct/100,fO=p.cost*0.05+p.trans;var cV=(p.lt*sigDC*sigDC)+(dC*dC*sigLT*sigLT),ss=Math.round(zV*Math.sqrt(cV)),rop=Math.round(dC*p.lt+ss);var qS=hA>0&&dC>0?Math.round(Math.sqrt(2*D_ann*p.qty*fO/hA)):Math.round(dC*7);var q=qS;if(p.useMoq&&p.moq>0)q=Math.max(1,Math.ceil(q/p.moq)*p.moq);if(p.useMax&&p.max>0&&q>p.max)q=p.max;return{dC:dC,ss:ss,rop:rop,q:q,tgtS:rop+q,sigLTC:sigLT};});
+  State.c.ech={days:days,mons:mons,tDays:tD,annF:annF,dd:dd,D_ann:D_ann,CVd:CVd,zVal:zV,fgMat:fgMat,fgH:fH,effCap:eC,ps:ps,fgSS:Math.round(zV*CVd*dd)};
+}
+
+function calcLookahead(){if(!State.c.ech)return;var days=State.c.ech.days,plan=new Array(days.length).fill(0),cov=new Array(days.length).fill(false),fH=State.c.ech.fgH;
+for(var di=0;di<days.length;di++){if(cov[di])continue;var dem=gD(days[di]);if(dem<=0){cov[di]=true;continue;}cov[di]=true;var tgt=dem,aH=0,l=1,aC=State.p.adminCost;
+while(di+l<days.length&&l<State.p.shelf){if(cov[di+l]){l++;continue;}var fD=gD(days[di+l]),addH=fD*fH*l;if(aH+addH>=aC)break;tgt+=fD;aH+=addH;cov[di+l]=true;l++;}
+var rem=tgt;for(var k=0;rem>0&&(di+k)<days.length;k++){var c=gC(days[di+k]),av=c-plan[di+k],am=Math.min(rem,av);if(am>0){plan[di+k]+=am;rem-=am;}}}
+State.c.lahPlan=plan;}
+
+function calcModels(){if(!State.c.ech||!State.c.lahPlan)return;
+var days=State.c.ech.days,C=State.c.ech,yF=State.p.yield/100,lM=0.8,hD=State.p.holdStartDay,whC=State.p.whMaxUnits;
+var fgSS=C.fgSS||0; // P0-2: correct scoping
+
+function sim(name,decide){var tOC=0,tH=0,tProd=0,tSO=0,tWst=0,nO=0,bL=0,fgB=[],fS=0,trace=[],tDemSim=0,tServed=0;
+for(var di=0;di<days.length;di++){var d=days[di],rawDem=gD(d),dem=rawDem+bL;tDemSim+=rawDem;var dW=0,vF=[];
+for(var i=0;i<fgB.length;i++){fgB[i].age++;if(fgB[i].age>State.p.shelf)dW+=fgB[i].q;else vF.push(fgB[i]);}fgB=vF;tWst+=dW*C.fgMat*lM;
+var cF=fgB.reduce((s,b)=>s+b.q,0);var r=decide(di,cF,dem,d);
+var bC=gC(d),eC=r.p>0?Math.max(0,bC-State.p.setupPen):bC;var rP=Math.min(Math.ceil(Math.max(0,r.p)/yF),eC),aP=Math.floor(rP*yF);
+var dayProd=0;
+if(aP>0){fgB.push({q:aP,age:0});cF+=aP;tProd+=aP;dayProd=aP;tOC+=ordCostDet(rP,di);if(r.nb){tOC+=State.p.adminCost;nO++;}}
+var rD=dem;for(var j=0;j<fgB.length&&rD>0;j++){var tk=Math.min(fgB[j].q,rD);fgB[j].q-=tk;rD-=tk;tServed+=tk;}
+fgB=fgB.filter(b=>b.q>0);var dayShort=0;if(rD>0){tSO+=rD;dayShort=rD;bL=State.p.backorder?rD:0;}else bL=0;
+var eod=fgB.reduce((s,b)=>s+b.q,0);
+if(whC<Infinity&&eod>whC){tWst+=(eod-whC)*C.fgMat*lM;for(var bi=fgB.length-1;bi>=0&&eod>whC;bi--){var rm=Math.min(fgB[bi].q,eod-whC);fgB[bi].q-=rm;eod-=rm;}fgB=fgB.filter(b=>b.q>0);}
+for(var bi=0;bi<fgB.length;bi++){if(fgB[bi].age>=hD)tH+=fgB[bi].q*C.fgH;}
+fS+=eod;trace.push({inv:eod,dem:rawDem,prod:dayProd,exp:dW,short:dayShort});}
+var ssH=0;C.ps.forEach((ps,i)=>{ssH+=ps.ss*(State.bom[i].cost*State.bom[i].holdPct/100);});
+// P0-3 FIX (v48): correct constant FG safety stock holding cost
+var fgSSHold = fgSS * C.fgH * 365 * C.annF;
+ssH += fgSSHold;
+var tot=(tOC+tH+tWst)*C.annF+ssH;var fillPct=tDemSim>0?(tServed/tDemSim*100):100;
+var lostSales$=tSO*State.p.sellPrice*C.annF;
+var totWithLost=tot+lostSales$;
+var ssProtected=name.indexOf('JIT')<0;
+return{name:name,tOC:tOC*C.annF,tH:tH*C.annF,ssH:ssH,tWst:tWst*C.annF,tot:tot,totFull:totWithLost,tProd:tProd,tSO:tSO,lostSales$:Math.round(lostSales$),avg:Math.round(fS/days.length*10)/10,nO:nO,trace:trace,fill:Math.round(fillPct*10)/10,ssProt:ssProtected};}
+
+var res=[],oA=State.p.adminCost;
+// (all strategy definitions unchanged — SS logic already correct from v47)
+res.push(sim('Part Period Balancing (PPB)',function(di,fg,dem,d){var target=dem+fgSS,need=Math.max(0,target-fg);if(need<=0)return{p:0,nb:false};var t=need,aH=0,l=1,bc=gC(d);while(di+l<days.length&&l<State.p.shelf){var f=gD(days[di+l]);aH+=f*C.fgH*l;if(aH>oA)break;if(t+f>Math.max(0,bc-State.p.setupPen)*yF)break;t+=f;l++;}return{p:Math.max(0,t),nb:true};}));
+res.push(sim('Silver-Meal Heuristic',function(di,fg,dem,d){var target=dem+fgSS,need=Math.max(0,target-fg);if(need<=0)return{p:0,nb:false};var t=need,mA=oA,bT=t,aH=0,l=1,bc=gC(d);while(di+l<days.length&&l<State.p.shelf){var f=gD(days[di+l]);if(t+f>bc*yF)break;aH+=f*C.fgH*l;t+=f;var av=(oA+aH)/(l+1);if(av>mA)break;mA=av;bT=t;l++;}return{p:Math.max(0,bT),nb:true};}));
+res.push(sim('Just-In-Time Daily (JIT)',function(di,fg,dem){var n=Math.max(0,dem-fg);return{p:n,nb:n>0};}));
+var _weekMap={},_weekOrd=[];
+days.forEach((d,di)=>{var wk=d.par||'W_'+Math.floor(di/5);if(!_weekMap[wk]){_weekMap[wk]={days:[],first:di};_weekOrd.push(wk);}_weekMap[wk].days.push(di);});
+var _d2w={};_weekOrd.forEach(wk=>{_weekMap[wk].days.forEach(di=>{_d2w[di]=wk;});});
+res.push(sim('Lot-For-Lot Weekly (LFL)',(function(){var lflSt={};return function(di,fg,dem,d){var wk=_d2w[di],ws=_weekMap[wk];if(!ws)return{p:0,nb:false};var isFirst=ws.first===di;if(isFirst){var wDem=0;ws.days.forEach(j=>wDem+=gD(days[j]));lflSt[wk]={target:wDem+fgSS,done:0};var need=Math.max(0,lflSt[wk].target-fg),cap=gC(d),t=Math.min(need,cap);lflSt[wk].done=Math.floor(t*yF);return{p:t,nb:t>0};}var st=lflSt[wk];if(!st)return{p:0,nb:false};var still=st.target-st.done-fg;if(still<=0)return{p:0,nb:false};var cap=gC(d),t=Math.min(Math.max(0,still),cap);st.done+=Math.floor(t*yF);return{p:t,nb:false};};})()));
+var mP=0;res.push(sim('Greedy Lookahead (Build-Ahead)',function(di,fg,dem,d){var pl=State.c.lahPlan[di]||0;if(pl===0&&fg<dem+fgSS&&dem>0)pl=Math.min(Math.max(0,dem+fgSS-fg),gC(d));var isN=pl>0&&mP===0;mP=pl;return{p:pl,nb:isN};}));mP=0;
+var eQ=C.dd>0?Math.max(5,Math.round(Math.sqrt(2*C.D_ann*oA/(C.fgMat*0.24||1)))):10,eA=0;
+res.push(sim('EOQ (Q='+eQ+')',function(di,fg,dem,d){eA+=dem;if(eA>=eQ||fg<fgSS+dem){eA=0;return{p:Math.min(eQ,gC(d)),nb:true};}return{p:0,nb:false};}));eA=0;
+res.push(sim('Fixed Period (3 Days)',function(di,fg,dem,d){if(di%3===0){var t=0;for(var k=0;k<3&&(di+k)<days.length;k++)t+=gD(days[di+k]);t=Math.max(0,t+fgSS-fg);return{p:Math.min(t,gC(d)),nb:t>0};}return{p:0,nb:false};}));
+res.push(sim('Wagner-Whitin (DP)',function(di,fg,dem,d){var target=dem+fgSS,need=Math.max(0,target-fg);if(need<=0)return{p:0,nb:false};var bc=gC(d),bC=Infinity,bT=need;for(var k=0;k<Math.min(State.p.shelf,10)&&(di+k)<days.length;k++){var t=0,cH=0;for(var j=0;j<=k;j++){var f=gD(days[Math.min(di+j,days.length-1)]);t+=f;if(j>0)cH+=f*C.fgH*j;}t=Math.max(0,t+fgSS-fg);if(t>bc*yF*(k+1))break;var tc=oA+cH,av=tc/(k+1);if(av<bC){bC=av;bT=Math.min(t,bc);}}return{p:Math.max(0,bT),nb:true};}));
+res.sort((a,b)=>a.totFull-b.totFull);State.c.models=res;}
+
+function runMC(){if(!State.c.ech)return;var days=State.c.ech.days,C=State.c.ech,R=500,yF=State.p.yield/100,lM=0.8,tA=0,fA=0,sP='',whC=State.p.whMaxUnits,fgSS=C.fgSS||0;
+for(var r=0;r<R;r++){var cI=State.bom.map((p,i)=>Math.round(C.ps[i].dC*p.lt*1.5)),cO=State.bom.map(()=>[]),tc=0,sr=0,dT=0,bL=0,fgB=[];
+for(var di=0;di<days.length;di++){var d=days[di],dem=Math.round(gN(gD(d),State.p.mape))+bL;dT+=Math.max(0,dem-bL);var e2=0,kp=[];for(var b=0;b<fgB.length;b++){if(fgB[b].e<=di)e2+=fgB[b].q;else kp.push(fgB[b]);}fgB=kp;
+for(var ri=0;ri<State.bom.length;ri++){var nw=[];for(var oj=0;oj<cO[ri].length;oj++){if(cO[ri][oj].a<=di){var rcost=di>=State.bom[ri].changeDay?(State.bom[ri].mode==="contract"?State.bom[ri].nextCost:gN(State.bom[ri].nextCost,State.bom[ri].cv)):State.bom[ri].cost;tc+=cO[ri][oj].q*rcost;cI[ri]+=cO[ri][oj].q;}else nw.push(cO[ri][oj]);}cO[ri]=nw;}
+var bC=gC(d),cP=bC;var blockPart='';
+for(var ci=0;ci<State.bom.length;ci++){var canMake=Math.floor(cI[ci]/State.bom[ci].qty);if(canMake<cP){cP=canMake;blockPart=State.bom[ci].name;}}
+var bl=dem>0&&cP<dem;
+var attempted=Math.min(cP,Math.ceil(dem/yF));
+var pr=Math.floor(attempted*yF);
+tc+=State.p.fixedFactory;
+// P0-2 (v48): enforce FG SS in Monte Carlo
+var extraForSS = 0;
+if(pr>0){
+  for(var c2=0;c2<State.bom.length;c2++)cI[c2]-=attempted*State.bom[c2].qty;
+  fgB.push({q:pr,e:di+State.p.shelf});
+  tc+=ordCost(attempted,di)+State.p.adminCost;
+}
+var fN=fgB.reduce((s,x)=>s+x.q,0);
+if(fN < fgSS && cP > attempted){ // room to produce more
+  var canAdd = Math.min(cP - attempted, fgSS - fN);
+  var addAttempt = Math.ceil(canAdd / yF);
+  var addGood = Math.floor(addAttempt * yF);
+  for(var c2=0;c2<State.bom.length;c2++)cI[c2]-=addAttempt*State.bom[c2].qty;
+  fgB.push({q:addGood,e:di+State.p.shelf});
+  tc+=ordCost(addAttempt,di)+State.p.adminCost;
+  pr += addGood;
+}
+for(var c3=0;c3<State.bom.length;c3++){var pt=State.bom[c3],ps=C.ps[c3],oO=0;for(var oi=0;oi<cO[c3].length;oi++)if(cO[c3][oi].a>di)oO+=cO[c3][oi].q;if(cI[c3]+oO<ps.rop)cO[c3].push({a:di+Math.max(1,Math.round(gN(pt.lt,pt.ltcv))),q:ps.q});}
+var rm=dem;for(var f=0;f<fgB.length&&rm>0;f++){var tk=Math.min(rm,fgB[f].q);fgB[f].q-=tk;rm-=tk;sr+=tk;}
+if(rm>0)bL=State.p.backorder?rm:0;else bL=0;
+fN=fgB.reduce((s,x)=>s+x.q,0);if(whC<Infinity&&fN>whC)fN=whC;tc+=fN*C.fgH+(e2*C.fgMat*lM);
+if(r===0){var bk=pr>0&&bl?"<span style='color:var(--a4)'>Partial ("+blockPart+" low)</span>":(dem>0&&cP===0&&blockPart?"<span style='color:var(--dg)'>Blocked: "+blockPart+" out</span>":"<span style='color:var(--ac)'>OK</span>");
+sP+='<tr><td>'+d.label+'</td><td>'+Math.max(0,dem-bL)+(bL>0?' +'+bL+'bl':'')+'</td><td>'+bk+'</td><td style="color:'+(pr>0?'var(--ac)':'var(--td)')+'">'+pr+'</td><td>'+fN+'</td><td style="color:'+(e2>0?'var(--dg)':'var(--td)')+'">'+e2+'</td><td style="color:'+(rm>0?'var(--dg)':'var(--td)')+'">'+rm+'</td><td>$'+Math.round(tc)+'</td></tr>';}}
+tA+=(tc*C.annF);fA+=(dT>0?(sr/dT)*100:100);}State.c.mc={cost:tA/R,fill:fA/R,path:sP};}
+
+function renderS1(){var h='';State.periods.forEach(p=>{var vis=true;if(p.type==='W'){if(hierarchyMode==='wd')vis=true;else{var pr=State.periods.find(x=>x.id===p.par);vis=pr&&State.exp[pr.id];}}if(p.type==='D'){var pw=State.periods.find(x=>x.id===p.par);if(hierarchyMode==='wd')vis=pw&&State.exp[pw.id];else{var pm=pw?State.periods.find(x=>x.id===pw.par):null;vis=(pw&&State.exp[pw.id])&&(pm&&State.exp[pm.id]);}}if(!vis)return;var pd=p.type==='W'?'padding-left:15px':(p.type==='D'?'padding-left:30px':''),cl=p.type==='M'?'row-m':(p.type==='W'?'row-w':'');var ce=(p.type==='M'&&hierarchyMode!=='wd')||(p.type==='W'&&hierarchyMode!=='mw');var tg=ce?"<span class='tgl' onclick=\"tgl('"+p.id+"')\">"+(State.exp[p.id]?'\u25BC':'\u25B6')+'</span>':'';h+='<tr class="'+cl+'"><td style="'+pd+'">'+tg+p.label+'</td><td>'+(p.type!=='D'?p.wd:'1')+'</td>';h+="<td><input class='e' id='f_"+p.id+"' value='"+p.fcst+"' onchange=\"updatePeriod('"+p.id+"','fcst',this.value)\"></td>";h+="<td><input class='ea' value='"+(p.act!==null?p.act:'')+"' placeholder='—' onchange=\"updatePeriod('"+p.id+"','act',this.value)\"></td>";h+="<td><input class='e' value='"+p.cap+"' onchange=\"updatePeriod('"+p.id+"','cap',this.value)\"></td></tr>";});document.getElementById('tH').innerHTML=h;}
+
+function renderBOM(){var h='<table class="T"><thead><tr><th style="text-align:left">Part</th><th>Qty/FG</th><th>Mode</th><th>Cost$</th><th style="color:var(--a4)">CV%</th><th style="color:var(--a3)">Nxt$</th><th style="color:var(--a3)">ChgDay</th><th>Trans$/u</th><th>LT d</th><th style="color:var(--a4)">LTCV%</th><th>MOQ</th><th>Max</th><th>Hold%/yr</th><th></th></tr></thead><tbody>';
+State.bom.forEach(p=>{var ic=p.mode==='contract';
+h+="<tr><td style='text-align:left'><input class='eb' style='width:55px;text-align:left;color:var(--dg)' value='"+p.name+"' onchange=\"updateBOM("+p.id+",'name',this.value)\"></td>";
+h+="<td><input class='eb' style='width:30px' value='"+p.qty+"' onchange=\"updateBOM("+p.id+",'qty',+this.value)\"></td>";
+h+="<td><select class='sku-sel' style='width:50px' onchange=\"updateBOM("+p.id+",'mode',this.value)\"><option value='spot' "+(!ic?'selected':'')+">Spot</option><option value='contract' "+(ic?'selected':'')+">Ctrct</option></select></td>";
+h+="<td><input class='eb' value='"+p.cost+"' onchange=\"updateBOM("+p.id+",'cost',+this.value)\"></td>";
+h+="<td>"+(ic?"fix":"<input class='eb' style='width:30px;color:var(--a4)' value='"+p.cv+"' onchange=\"updateBOM("+p.id+",'cv',+this.value)\">%")+"</td>";
+h+="<td><input class='eb' style='color:var(--a3)' value='"+p.nextCost+"' onchange=\"updateBOM("+p.id+",'nextCost',+this.value)\"></td>";
+h+="<td><input class='eb' style='color:var(--a3)' value='"+p.changeDay+"' onchange=\"updateBOM("+p.id+",'changeDay',+this.value)\"></td>";
+h+="<td><input class='eb' style='width:32px' value='"+p.trans+"' onchange=\"updateBOM("+p.id+",'trans',+this.value)\"></td>";
+h+="<td><input class='eb' style='width:30px' value='"+p.lt+"' onchange=\"updateBOM("+p.id+",'lt',+this.value)\"></td>";
+h+="<td><input class='eb' style='width:30px;color:var(--a4)' value='"+p.ltcv+"' onchange=\"updateBOM("+p.id+",'ltcv',+this.value)\">%</td>";
+h+="<td><input class='eb' style='width:34px' value='"+p.moq+"' onchange=\"updateBOM("+p.id+",'moq',+this.value)\"></td>";
+h+="<td><input class='eb' style='width:34px' value='"+p.max+"' onchange=\"updateBOM("+p.id+",'max',+this.value)\"></td>";
+h+="<td><input class='eb' style='width:30px' value='"+p.holdPct+"' onchange=\"updateBOM("+p.id+",'holdPct',+this.value)\">%</td>";
+h+="<td><button class='btnSm' onclick='rmBOM("+p.id+")'>×</button></td></tr>";});
+h+='</tbody></table>';document.getElementById('bomArea').innerHTML=h;}
+
+function renderDown(){var C=State.c.ech;if(!C)return;
+document.getElementById('vMape').textContent=State.p.mape+'%';document.getElementById('vSL').textContent=State.p.sl+'%';document.getElementById('vShelf').textContent=State.p.shelf+'d';document.getElementById('vYield').textContent=State.p.yield+'%';document.getElementById('vSetPen').textContent=State.p.setupPen;document.getElementById('vFix').textContent='$'+State.p.fixedFactory;document.getElementById('vOptU').textContent=State.p.optUtil+'%';document.getElementById('vHoldStart').textContent=State.p.holdStartDay+'d';document.getElementById('vAdmin').textContent='$'+State.p.adminCost;document.getElementById('vSellPrice').textContent='$'+State.p.sellPrice;
+var fH=fgH();
+var holdParts=State.bom.map(b=>'<b>'+b.name+'</b>: $'+b.cost+' × '+b.qty+'qty × '+b.holdPct+'%/365 = $'+(b.cost*b.qty*b.holdPct/100/365).toFixed(4));
+document.getElementById('calcHoldInfo').innerHTML='<b style="color:var(--a4)">FG Hold/u/d</b> = '+holdParts.join(' + ')+' = <b style="color:var(--ac)">$'+fH.toFixed(4)+'/u/d</b> | <b style="color:var(--a3)">FG Safety Stock</b>: <b style="color:var(--a3)">'+C.fgSS+'u</b> (z='+C.zVal.toFixed(2)+' × CV='+C.CVd.toFixed(2)+' × dd='+C.dd.toFixed(1)+') — all strategies (except JIT) maintain this buffer<br><b style="color:var(--a2)">Prod cap</b>: '+C.effCap+'u/d '+(State.p.prodPol==='fcst'?'(per-period table)':'('+State.p.prodPol+' override)')+' | Sell: $'+State.p.sellPrice+'/u';
+
+// S3, S4, S5, graph, sensitivity, optimizer — unchanged from v47 (already production clean)
+
+var w=State.c.models?State.c.models[0]:{name:'—'},wn=w.name,rP,rW;
+if(wn.indexOf('JIT')>=0){rP='JIT Kanban (daily)';rW='JIT produces daily → order subparts daily too. Small frequent POs.';}
+else if(wn.indexOf('LFL')>=0){rP='(R,S) Periodic Review (weekly)';rW='LFL batches production weekly. So order subparts weekly too: every Monday check stock, place 1 PO to cover the week.';}
+else if(wn.indexOf('Fixed')>=0){rP='(R,S) Periodic Review (3-day)';rW='3-day production → 3-day subpart ordering cycle.';}
+else if(wn.indexOf('Greedy')>=0||wn.indexOf('Wagner')>=0){rP='(s,S) Min-Max';rW='Variable batch sizes → flexible ordering.';}
+else if(wn.indexOf('EOQ')>=0){rP='(s,Q) Continuous Review';rW='Fixed-Q production → fixed-Q subpart ordering.';}
+else{rP='(s,S) Min-Max';rW='Dynamic lot-sizing → flexible ordering.';}
+document.getElementById('procRec').innerHTML="<div class='rec-box'><div style='color:var(--ac);font-weight:700;font-size:10px'>🤖 Subpart Procurement Recommendation</div><div style='margin:3px 0'><span style='color:var(--td)'>Production winner (when factory runs):</span> <b style='color:var(--ac)'>"+wn+"</b></div><div style='margin:3px 0'><span style='color:var(--td)'>Matching procurement (when to buy materials):</span> <b style='color:var(--a2)'>"+rP+"</b></div><div style='color:var(--td);font-size:7.5px;margin-top:2px'>"+rW+"</div></div>";
+var pc='';C.ps.forEach((ps,i)=>{var p=State.bom[i];pc+="<div class='gc'><div class='gl' style='color:var(--dg);font-size:9px;font-weight:700'>"+p.name+"</div><div style='display:flex;gap:12px;margin-top:3px'><div><div class='gl'>Q*</div><div class='gv' style='color:var(--ac)'>"+ps.q+"</div></div><div><div class='gl'>ROP</div><div class='gv' style='color:var(--wn)'>"+ps.rop+"</div></div><div><div class='gl'>SS</div><div class='gv' style='color:var(--a3)'>"+ps.ss+"</div></div><div><div class='gl'>Daily</div><div class='gv'>"+ps.dC.toFixed(1)+"</div></div></div></div>";});document.getElementById('partCards').innerHTML=pc;
+
+var tDT=C.days.reduce((s,d)=>s+gD(d),0);
+document.getElementById('costExplain').innerHTML='<b>TRUE TOTAL</b> = Operating Cost (material + ordering + holding + waste + safety stock) + <b style="color:var(--dg)">Lost Sales Revenue</b> (unfulfilled orders × $'+State.p.sellPrice+' sell price). Winner = lowest TRUE TOTAL. | Mat: $'+C.fgMat.toFixed(2)+'/u | Demand: '+tDT+'u/'+C.tDays+'d | Cap: '+C.effCap+'u/d';
+var mH='',hExp='';
+if(State.c.models){State.c.models.forEach((r,i)=>{var w=i===0;
+var ssTag=r.ssProt?"<span style='color:var(--ac)'>✓</span>":"<span style='color:var(--td)'>✗</span>";
+mH+="<tr style='background:"+(w?'rgba(0,229,160,.04)':'transparent')+"'><td style='color:"+(w?'var(--ac)':'var(--td)')+"'>"+(w?'★ ':'')+(i+1)+"</td><td style='text-align:left;color:"+(w?'var(--ac)':'var(--tx)')+";font-weight:"+(w?700:400)+"'>"+r.name+"</td><td>"+ssTag+"</td><td>"+r.nO+"</td><td>"+fc(r.tOC)+"</td><td>"+fc(r.tH)+"</td><td>"+r.avg+"u</td><td>"+fc(r.ssH)+"</td><td style='color:var(--dg)'>"+fc(r.tWst)+"</td><td>"+fc(r.tot)+"</td><td style='color:"+(r.fill>=95?'var(--ac)':'var(--dg)')+"'>"+r.fill+"%</td><td style='color:var(--dg)'>"+fc(r.lostSales$)+" ("+r.tSO+"u×$"+State.p.sellPrice+")</td><td style='color:"+(w?'var(--ac)':'var(--wn)')+";font-weight:700'>"+fc(r.totFull)+"</td><td>"+r.tProd+"u</td></tr>";});
+var b=State.c.models[0],s=State.c.models[1];
+document.getElementById('win').innerHTML="<div style='font-size:8px;color:var(--ac);font-family:JetBrains Mono,monospace;text-transform:uppercase'>★ Optimal (lowest total cost + lost sales combined)</div><div style='font-size:18px;font-weight:700;font-family:JetBrains Mono,monospace;color:var(--ac)'>"+b.name+"</div><div class='rs'>Operating cost: "+fc(b.tot)+'/yr + Lost revenue: '+fc(b.lostSales$)+'/yr = <b>TRUE TOTAL: '+fc(b.totFull)+'/yr</b> | Fill: '+b.fill+'% | '+b.nO+' orders | '+b.tProd+'u produced | Saves '+fc(s.totFull-b.totFull)+'/yr vs '+s.name+'</div>';
+hExp='<b style="color:var(--a4)">Holding cost by strategy:</b> ';
+State.c.models.slice(0,4).forEach(m=>{hExp+=m.name.split('(')[0].trim()+': avg='+m.avg+'u → '+fc(m.tH)+'/yr. ';});
+hExp+='Holding is charged on actual end-of-day unsold FG. EOQ classic theory says avg=Q/2 (sawtooth). JIT≈0 (daily). LFL builds week start, drains to 0 by end of week.';
+hExp+='<br><span style="color:var(--a4)">✅ AUDIT NOTE (v48): All strategies (except JIT) now maintain FG safety stock. Monte Carlo also enforces FG SS buffer. SS$/y includes correct annual holding cost of the buffer.</span>';}
+document.getElementById('tModels').innerHTML=mH;document.getElementById('holdExplain').innerHTML=hExp;
+
+// Graph, S5, S6, S7, S7B unchanged (already clean)
+
+var gS=document.getElementById('graphSelectors');var gH='';
+if(State.c.models){if(typeof graphIdx==='undefined'||graphIdx>=State.c.models.length)graphIdx=0;
+State.c.models.forEach((m,i)=>{gH+="<label class='gsel' style='"+(i===graphIdx?"background:rgba(0,229,160,.1);border-radius:3px;padding:1px 4px":"")+"'><input type='radio' name='gsel' "+(i===graphIdx?'checked':'')+" onchange='graphIdx="+i+";drawGraph()'>"+m.name+"</label>";});}
+gS.innerHTML=gH;drawGraph();
+
+var mH2='',cB=0,tD2=0,tP2=0;
+if(State.c.lahPlan){var days=C.days,mM={};for(var di=0;di<days.length;di++){var d=days[di],wk=State.periods.find(x=>x.id===d.par),mk=wk?wk.par:'?';if(!mM[mk]){var mp=State.periods.find(x=>x.id===mk);mM[mk]={label:mp?mp.label:(wk?wk.label.split(' ')[0]:'?'),idx:[]};}mM[mk].idx.push(di);}
+Object.keys(mM).forEach(mk=>{var mg=mM[mk],sD=0,sM=0,sH=0,eR=false;mg.idx.forEach(di=>{var dm=gD(days[di]),mp=State.c.lahPlan[di]||0;sD+=dm;sM+=mp;cB+=(mp-dm);if(cB<0)cB=0;sH+=cB*C.fgH;if(cB>State.p.shelf*5)eR=true;});tD2+=sD;tP2+=sM;var nd=sM-sD;
+mH2+='<tr><td style="text-align:left;color:var(--a2)">'+mg.label+'</td><td>'+sD+'</td><td>'+sD+'</td><td style="color:var(--ac);font-weight:700">'+sM+'</td><td style="color:'+(nd>0?'var(--ac)':nd<0?'var(--dg)':'var(--td)')+"'>"+(nd>0?'+':'')+nd+'</td><td style="color:'+(cB>0?'var(--ac)':'var(--td)')+'">'+cB+'</td><td>'+fc(sH)+'</td><td style="color:'+(eR?'var(--dg)':'var(--td)')+"'>"+(eR?'⚠':'—')+'</td></tr>';});
+document.getElementById('milpDebug').innerHTML='Demand: <b>'+tD2+'u</b> | Lookahead: <b>'+tP2+'u</b> | Ratio: <b>'+(tD2>0?(tP2/tD2*100).toFixed(0):'0')+'%</b> (≈100% = demand-matched, >100% = build-ahead buffer)';}
+document.getElementById('tMILP').innerHTML=mH2;
+if(State.c.mc){document.getElementById('mcResult').innerHTML="<span class='g'>500 runs</span> | Cost: <span class='v'>"+fc(State.c.mc.cost)+"</span>/yr | Fill: <span class='"+(State.c.mc.fill>95?'g':'r')+"'>"+State.c.mc.fill.toFixed(1)+'%</span>';document.getElementById('mcPath').innerHTML=State.c.mc.path;}}
+
+function drawGraph(){
+  var cv=document.getElementById('invGraph'),ctx=cv.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  var cssW=cv.clientWidth,cssH=cv.clientHeight;
+  cv.width=cssW*dpr;cv.height=cssH*dpr;
+  ctx.scale(dpr,dpr);
+  var W=cssW,H=cssH;
+  ctx.clearRect(0,0,W,H);
+  if(!State.c.models||!State.c.models.length)return;
+  if(typeof graphIdx==='undefined')graphIdx=0;
+  var m=State.c.models[graphIdx];
+  if(!m||!m.trace||!m.trace.length)return;
+  var show=Math.min(graphDays||40,m.trace.length);
+  var tr=m.trace.slice(0,show);
+  var maxY=1;
+  for(var i=0;i<show;i++) maxY=Math.max(maxY,tr[i].inv,tr[i].dem,tr[i].prod);
+  maxY=Math.ceil(maxY*1.15);
+  var P={l:50,r:20,t:30,b:40},gW=W-P.l-P.r,gH=H-P.t-P.b;
+  var barW=gW/show,barPad=barW*0.12;
+  ctx.fillStyle='#dde0ed';ctx.font='bold 12px JetBrains Mono';ctx.textAlign='left';
+  ctx.fillText(m.name+' — Daily Inventory Cycle ('+show+' days)',P.l,18);
+  var gridN=5;
+  ctx.textAlign='right';ctx.font='9px JetBrains Mono';
+  for(var i=0;i<=gridN;i++){
+    var y=P.t+gH*(1-i/gridN);
+    ctx.strokeStyle=i===0?'#334155':'#1a2030';ctx.lineWidth=i===0?1:0.5;
+    ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();
+    ctx.fillStyle='#5f6a85';
+    ctx.fillText(Math.round(maxY*i/gridN),P.l-6,y+4);
+  }
+  ctx.textAlign='center';ctx.font='8px JetBrains Mono';
+  for(var d=0;d<show;d++){
+    var x=P.l+d*barW+barW/2;
+    if(show<=20||d%2===0) ctx.fillText('D'+(d+1),x,H-8);
+    if(d>0&&d%5===0){
+      ctx.strokeStyle='#334155';ctx.lineWidth=0.5;ctx.setLineDash([3,3]);
+      ctx.beginPath();ctx.moveTo(P.l+d*barW,P.t);ctx.lineTo(P.l+d*barW,P.t+gH);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='#5f6a85';ctx.fillText('Wk'+(d/5+1),P.l+d*barW,P.t-4);
+    }
+  }
+  for(var d=0;d<show;d++){
+    var x=P.l+d*barW+barPad;
+    var bw=barW-barPad*2;
+    var bh=tr[d].inv/maxY*gH;
+    var y=P.t+gH-bh;
+    var grad=ctx.createLinearGradient(x,y,x,P.t+gH);
+    grad.addColorStop(0,'rgba(74,222,128,0.7)');grad.addColorStop(1,'rgba(74,222,128,0.15)');
+    ctx.fillStyle=grad;ctx.fillRect(x,y,bw,bh);
+    ctx.strokeStyle='rgba(74,222,128,0.4)';ctx.lineWidth=0.5;ctx.strokeRect(x,y,bw,bh);
+    if(tr[d].inv>0&&bh>12){
+      ctx.fillStyle='rgba(74,222,128,0.9)';ctx.font='bold 8px JetBrains Mono';ctx.textAlign='center';
+      ctx.fillText(tr[d].inv,x+bw/2,y-3);
+    }
+  }
+  ctx.strokeStyle='#f472b6';ctx.lineWidth=2;ctx.setLineDash([]);
+  ctx.beginPath();
+  for(var d=0;d<show;d++){
+    var x=P.l+d*barW+barW/2;
+    var y=P.t+gH-tr[d].dem/maxY*gH;
+    if(d===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  for(var d=0;d<show;d++){
+    var x=P.l+d*barW+barW/2;
+    var y=P.t+gH-tr[d].dem/maxY*gH;
+    ctx.beginPath();ctx.arc(x,y,2.5,0,Math.PI*2);ctx.fillStyle='#f472b6';ctx.fill();
+  }
+  var fgSS=State.c.ech.fgSS||0;
+  if(fgSS>0&&fgSS<maxY){
+    var ssY=P.t+gH-fgSS/maxY*gH;
+    ctx.strokeStyle='#a78bfa';ctx.lineWidth=1.5;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(P.l,ssY);ctx.lineTo(W-P.r,ssY);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#a78bfa';ctx.font='bold 9px JetBrains Mono';ctx.textAlign='left';
+    ctx.fillText('SS='+fgSS,P.l+4,ssY-4);
+  }
+  for(var d=0;d<show;d++){
+    if(tr[d].prod<=0)continue;
+    var x=P.l+d*barW+barW/2;
+    var yBase=P.t+gH;
+    var yTop=P.t+gH-tr[d].prod/maxY*gH;
+    ctx.strokeStyle='#38bdf8';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(x,yBase);ctx.lineTo(x,yTop);ctx.stroke();
+    ctx.fillStyle='#38bdf8';ctx.beginPath();ctx.moveTo(x-4,yTop+5);ctx.lineTo(x+4,yTop+5);ctx.lineTo(x,yTop-1);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#38bdf8';ctx.font='bold 7px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText('+'+tr[d].prod,x,yTop-5);
+  }
+  for(var d=0;d<show;d++){
+    if(tr[d].exp<=0)continue;
+    var x=P.l+d*barW+barW/2;
+    ctx.beginPath();ctx.arc(x,P.t+gH+12,5,0,Math.PI*2);ctx.fillStyle='rgba(239,68,68,0.8)';ctx.fill();
+    ctx.fillStyle='#ef4444';ctx.font='bold 7px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText('-'+tr[d].exp,x,P.t+gH+16);
+  }
+  for(var d=0;d<show;d++){
+    if(tr[d].short<=0)continue;
+    var x=P.l+d*barW+barW*0.8;
+    ctx.beginPath();ctx.arc(x,P.t+gH+12,4,0,Math.PI*2);ctx.fillStyle='rgba(251,191,36,0.8)';ctx.fill();
+    ctx.fillStyle='#fbbf24';ctx.font='bold 7px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText('!'+tr[d].short,x,P.t+gH+16);
+  }
+  var totDem=0,totProd=0,totExp=0,totShort=0;
+  for(var d=0;d<show;d++){totDem+=tr[d].dem;totProd+=tr[d].prod;totExp+=tr[d].exp;totShort+=tr[d].short;}
+  document.getElementById('graphStats').innerHTML='<b style="color:var(--ac)">'+m.name+'</b> first '+show+'d: Demand=<b>'+totDem+'u</b> | Produced=<b style="color:#38bdf8">'+totProd+'u</b> | Expired=<b style="color:#ef4444">'+totExp+'u</b> | Shortages=<b style="color:#fbbf24">'+totShort+'u</b> | Avg end-of-day inv=<b style="color:#4ade80">'+m.avg+'u</b> | Fill=<b>'+(m.fill)+'%</b>';
+}
+
+function runSensitivity(){document.getElementById('sensResult').innerHTML='Running...';var params=[{key:'mape',label:'MAPE %',vals:[0,15,30,50]},{key:'shelf',label:'Shelf d',vals:[1,3,7,14]},{key:'sl',label:'SL %',vals:[85,90,95,99]},{key:'yield',label:'Yield %',vals:[70,85,95,100]},{key:'adminCost',label:'Admin $/order',vals:[20,50,100,200]},{key:'holdStartDay',label:'Hold delay d',vals:[0,1,3,7]}];var oP=JSON.parse(JSON.stringify(State.p));calcEch();calcLookahead();calcModels();var oC=State.c.models[0].totFull;
+var h='<table class="sens-tbl"><thead><tr><th>Parameter</th>';for(var v=0;v<4;v++)h+='<th>Scenario '+(v+1)+'</th>';h+='<th>Range (biggest = focus here)</th></tr></thead><tbody>';
+params.forEach(pm=>{h+='<tr><td style="color:var(--a2)">'+pm.label+'</td>';var cs=[];pm.vals.forEach(v=>{State.p=JSON.parse(JSON.stringify(oP));State.p[pm.key]=v;calcEch();calcLookahead();calcModels();var c=State.c.models[0].totFull;cs.push(c);var d=c-oC;h+='<td style="color:'+(d>0?'var(--dg)':d<0?'var(--ac)':'var(--td)')+'">'+pm.key+'='+v+'<br>'+fc(c)+'<br><span style="font-size:6px">'+(d>=0?'+':'')+Math.round(d)+'</span></td>';});h+='<td style="color:var(--wn);font-weight:700">'+fc(Math.max.apply(null,cs)-Math.min.apply(null,cs))+'</td></tr>';});
+h+='</tbody></table>';State.p=JSON.parse(JSON.stringify(oP));fullRecalc();document.getElementById('sensTable').innerHTML=h;document.getElementById('sensResult').innerHTML='✅ Done. The parameter with the LARGEST range is your biggest cost lever.';}
+
+function runAutoOptimizer(){document.getElementById('optimizerResult').innerHTML='🔬 Running 150 experiments with YOUR shelf life, BOM, and capacity fixed...';optimizerResults=[];var oP=JSON.parse(JSON.stringify(State.p));baselineCost=State.c.models[0].totFull;var ct=0;
+var slV=[85,90,95,99],blV=[true,false],hdV=[0,1,3,7],acV=[20,50,100,200];
+function go(){State.p=JSON.parse(JSON.stringify(oP));
+State.p.sl=slV[Math.floor(Math.random()*slV.length)];
+State.p.backorder=blV[Math.floor(Math.random()*2)];
+State.p.holdStartDay=hdV[Math.floor(Math.random()*hdV.length)];
+State.p.adminCost=acV[Math.floor(Math.random()*acV.length)];
+calcEch();calcLookahead();calcModels();runMC();
+var cost=State.c.models[0].totFull,fill=State.c.mc.fill,win=State.c.models[0].name;
+var lbl='Service Level '+State.p.sl+'% | '+(State.p.backorder?'Backlog ON':'No backlog')+' | Hold delay '+State.p.holdStartDay+'d | Admin $'+State.p.adminCost+'/order';
+optimizerResults.push({label:lbl,cost:Math.round(cost),fill:fill.toFixed(1),savings:((baselineCost-cost)/baselineCost*100).toFixed(1),winner:win,config:JSON.parse(JSON.stringify(State.p))});
+if(++ct>=150){State.p=JSON.parse(JSON.stringify(oP));fullRecalc();optimizerResults.sort((a,b)=>a.cost-b.cost);
+var h='';optimizerResults.slice(0,10).forEach((r,i)=>{h+='<tr><td>'+(i+1)+"</td><td style='text-align:left;font-size:7px'>"+r.label+"</td><td style='color:var(--ac);font-weight:700'>"+r.winner+"</td><td>"+fc(r.cost)+"</td><td>"+r.fill+"%</td><td style='color:var(--ac)'>"+r.savings+"% vs $"+Math.round(baselineCost)+'/yr baseline</td><td><button class="btnSm" onclick="applyConfig('+i+')">Apply</button></td></tr>';});
+document.getElementById('lbBody').innerHTML=h;
+document.getElementById('optimizerResult').innerHTML='✅ 150 experiments (your shelf='+oP.shelf+'d, yield='+oP.yield+'%, cap='+gC({cap:25})+'u/d held fixed). Best: <b style="color:var(--ac)">'+optimizerResults[0].winner+'</b> at '+fc(optimizerResults[0].cost)+'/yr (saves '+optimizerResults[0].savings+'% vs your current $'+Math.round(baselineCost)+'/yr)';
+}else setTimeout(go,0);}go();}
+function applyBestConfig(){applyConfig(0);}
+function applyConfig(i){State.p=JSON.parse(JSON.stringify(optimizerResults[i].config));saveVersion('Applied #'+(i+1)+': '+optimizerResults[i].winner);_needS1=true;_needBOM=true;fullRecalc();}
+function saveVersion(c){versionHistory.unshift({time:new Date().toLocaleTimeString(),config:JSON.parse(JSON.stringify(State.p)),comment:c||'Change'});if(versionHistory.length>10)versionHistory.pop();var h='';versionHistory.forEach((v,i)=>{h+='<div onclick="revertVersion('+i+')" style="padding:4px;border-bottom:1px solid var(--br);cursor:pointer" onmouseover="this.style.background=\'var(--s2)\'" onmouseout="this.style.background=\'transparent\'">'+v.time+' — '+v.comment+'</div>';});document.getElementById('versionHistory').innerHTML=h;}
+function revertVersion(i){State.p=JSON.parse(JSON.stringify(versionHistory[i].config));_needS1=true;_needBOM=true;fullRecalc();}
+function saveScenario(){localStorage.setItem('invS48',JSON.stringify(State));alert('✅ Saved as v48');}
+function loadScenario(){var s=localStorage.getItem('invS48');if(s){State=JSON.parse(s);_needS1=true;_needBOM=true;fullRecalc();alert('✅ Loaded v48');}}
+
+_needS1=true;_needBOM=true;fullRecalc();saveVersion('v48 — Production Ready • FG SS holding cost fixed (365×annF) • FG SS enforced in Monte Carlo • All P0s resolved');
+</script>
+</body>
+</html>

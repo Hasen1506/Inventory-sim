@@ -143,8 +143,8 @@ select.sku-sel{background:var(--s2);color:var(--tx);border:1px solid var(--br);p
 <canvas id="invGraph" style="width:100%;height:400px;background:var(--s2);border-radius:4px;border:1px solid var(--br)"></canvas>
 <div id="graphStats" style="margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:7.5px;color:var(--td)"></div></div>
 
-<!-- S5 Greedy Lookahead --><div class="S d"><div class="st"><span>5. Greedy Lookahead (Build-Ahead) (Monthly)</span></div>
-<div style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin-bottom:3px">This is a <b style="color:var(--a3)">greedy lookahead heuristic</b>, NOT real MILP. It looks ahead within shelf life, consolidating future demand when holding cost &lt; ordering cost saved. A true MILP would use a solver (PuLP/OR-Tools) with binary decision variables. This is a fast approximation. Shown here to compare vs heuristics (PPB, Silver-Meal, etc).</div>
+<!-- S5 Greedy Lookahead --><div class="S d"><div class="st"><span>5. MPS Optimizer (Forecast → MPS → MRP)</span></div>
+<div style="font-size:7px;color:var(--td);font-family:'JetBrains Mono',monospace;margin-bottom:3px">Now uses a <b style="color:var(--a3)">constrained dynamic-programming optimizer</b> to approximate MILP-style Master Production Scheduling (MPS). Flow is: Forecast engine → MPS optimization under capacity/yield/warehouse constraints → MRP-style component releases by lead time and policy (L4L/FOQ/Min-Max).</div>
 <div id="milpDebug" class="debug-box"></div>
 <table class="T"><thead><tr><th style="text-align:left;min-width:50px">Month</th><th>Demand</th><th>JIT</th><th style="color:var(--ac)">Lookahead</th><th>Delta</th><th>Buffer</th><th>Hold$</th><th style="color:var(--dg)">Expiry</th></tr></thead><tbody id="tMILP"></tbody></table></div>
 
@@ -228,7 +228,7 @@ function ordCostDet(Q,di){
 }
 
 function trigger(s1,bom){_needS1=s1;_needBOM=bom;clearTimeout(_trig);_trig=setTimeout(fullRecalc,15);}
-function fullRecalc(){calcEch();calcLookahead();calcModels();runMC();if(_needS1)renderS1();if(_needBOM)renderBOM();renderDown();_needS1=false;_needBOM=false;}
+function fullRecalc(){calcEch();calcForecast();calcMPS();calcMRP();calcLookahead();calcModels();runMC();if(_needS1)renderS1();if(_needBOM)renderBOM();renderDown();_needS1=false;_needBOM=false;}
 
 function upP(k,v){if(k==='workDays'||k==='indianHols'){State.p[k]=v;buildCal(State);trigger(true,false);return;}if(k==='backorder')State.p[k]=v;else if(k==='prodPol')State.p[k]=v;else State.p[k]=Number(v);trigger(false,false);}
 function updatePeriod(id,key,val){var p=State.periods.find(x=>x.id===id);if(!p)return;p[key]=(val===''||val===null)?null:Number(val);if(key==='fcst'&&p[key]!==null){
@@ -244,6 +244,80 @@ function addBOM(){State.bom.push({id:Date.now(),name:'New',qty:1,mode:'spot',cos
 function rmBOM(id){State.bom=State.bom.filter(b=>b.id!==id);trigger(false,true);}
 function distributeForecast(){State.periods.forEach(p=>{if(p.type==='M'){var wks=State.periods.filter(x=>x.par===p.id&&x.type==='W');if(wks.length){var v=splitProp(p.fcst,wks.map(w=>w.wd));wks.forEach((w,i)=>{w.fcst=v[i];});}}if(p.type==='W'){var dys=State.periods.filter(x=>x.par===p.id&&x.type==='D');if(dys.length){var v=splitProp(p.fcst,dys.map(()=>1));dys.forEach((d,i)=>{d.fcst=v[i];});}}});trigger(true,false);}
 function changeHierarchy(m){hierarchyMode=m;buildCal(State);trigger(true,false);}
+
+
+function calcForecast(){
+  var days=State.periods.filter(x=>x.type==='D');if(!days.length)days=State.periods.filter(x=>x.type==='W');
+  if(!days.length){State.c.forecast=[];return;}
+  var monthRows=State.periods.filter(x=>x.type==='M'),monthAvg=monthRows.length?monthRows.reduce((a,m)=>a+gD(m),0)/monthRows.length:1;
+  var monthFactor={};monthRows.forEach(m=>{monthFactor[m.id]=monthAvg>0?gD(m)/monthAvg:1;});
+  var out=[];
+  for(var di=0;di<days.length;di++){
+    var d=days[di],base=Math.max(0,gD(d));
+    var st=Math.max(0,di-10),hist=[];
+    for(var j=st;j<di;j++)hist.push(Math.max(0,gD(days[j])));
+    var ma=hist.length?hist.reduce((a,b)=>a+b,0)/hist.length:base;
+    var tr=0;if(hist.length>=2)tr=(hist[hist.length-1]-hist[0])/(hist.length-1);
+    var wk=State.periods.find(x=>x.id===d.par),mk=wk?wk.par:null,sea=mk&&monthFactor[mk]?monthFactor[mk]:1;
+    var pred=Math.max(0,Math.round(base*0.55+(ma+tr)*0.35+base*sea*0.10));
+    out.push(pred);
+  }
+  State.c.forecast=out;
+}
+
+function calcMPS(){
+  if(!State.c.ech||!State.c.forecast){State.c.mpsPlan=[];return;}
+  var days=State.c.ech.days,fc=State.c.forecast,yF=Math.max(0.01,State.p.yield/100),fgSS=State.c.ech.fgSS||0;
+  var maxCap=Math.max.apply(null,days.map(d=>gC(d))),maxInv=Math.min(State.p.whMaxUnits,Math.max(120,Math.round(State.c.ech.dd*State.p.shelf*3+fgSS+maxCap*3)));
+  var minInv=State.p.backorder?-Math.max(80,Math.round(State.c.ech.dd*5)):0;
+  var dp=[{}],prev=[{}];dp[0][fgSS]=0;
+  for(var di=0;di<days.length;di++){
+    var next={},bk={},dem=Math.max(0,fc[di]||0),cap=Math.max(0,Math.floor(gC(days[di])));
+    for(var k in dp[di]){
+      var inv=+k,baseCost=dp[di][k];
+      for(var pr=0;pr<=cap;pr++){
+        var req=Math.ceil(pr/yF),prod=Math.floor(req*yF),nInv=inv+prod-dem,short=0;
+        if(!State.p.backorder&&nInv<0){short=-nInv;nInv=0;}else if(State.p.backorder&&nInv<0){short=-nInv;}
+        if(nInv>maxInv)nInv=maxInv;if(nInv<minInv)nInv=minInv;
+        var hold=Math.max(0,nInv)*State.c.ech.fgH;
+        var cost=baseCost+(prod>0?State.p.adminCost:0)+ordCostDet(req,di)+hold+short*State.p.sellPrice;
+        if(next[nInv]===undefined||cost<next[nInv]){next[nInv]=cost;bk[nInv]={pi:inv,p:req};}
+      }
+    }
+    dp.push(next);prev[di+1]=bk;
+  }
+  var endStates=dp[days.length],bestInv=null,best=Infinity;
+  for(var ik in endStates){if(endStates[ik]<best){best=endStates[ik];bestInv=+ik;}}
+  var plan=new Array(days.length).fill(0),cur=bestInv;
+  for(var di=days.length;di>0;di--){var b=prev[di][cur];if(!b)break;plan[di-1]=Math.floor(Math.max(0,b.p)*yF);cur=b.pi;}
+  State.c.mpsPlan=plan;
+  State.c.mpsCost=best;
+}
+
+function calcMRP(){
+  if(!State.c.mpsPlan||!State.c.ech){State.c.mrp={parts:[]};return;}
+  var days=State.c.ech.days,mps=State.c.mpsPlan;
+  var parts=State.bom.map(function(b){
+    var policy=(b.cv>12||b.ltcv>12)?'minmax':((b.trans+b.cost*0.05)>2?'foq':'l4l');
+    var gross=mps.map(q=>Math.round(q*b.qty)),onHand=Math.round(gross.slice(0,Math.max(1,b.lt)).reduce((a,c)=>a+c,0)*0.4);
+    var rel=new Array(days.length).fill(0),rcpt=new Array(days.length).fill(0),po=[];
+    for(var di=0;di<days.length;di++){
+      onHand+=rcpt[di]||0;
+      var req=gross[di]||0;
+      if(onHand<req){
+        var need=req-onHand,lot=need;
+        if(policy==='foq')lot=Math.max(need,b.moq||1);
+        if(policy==='minmax')lot=Math.max(need,(b.max&&b.max>0)?Math.min(b.max,Math.max(b.moq||1,Math.round((need+(b.rop||0))*1.2))):Math.max(b.moq||1,need));
+        if(b.useMoq&&b.moq>0)lot=Math.ceil(lot/b.moq)*b.moq;
+        if(b.useMax&&b.max>0)lot=Math.min(lot,b.max);
+        var rDay=Math.max(0,di-b.lt);rel[rDay]+=lot;rcpt[di]+=lot;po.push({day:rDay,qty:lot,arrive:di});onHand+=lot;
+      }
+      onHand-=req;
+    }
+    return {id:b.id,name:b.name,policy:policy,orders:po};
+  });
+  State.c.mrp={parts:parts};
+}
 
 function calcEch(){
   var days=State.periods.filter(x=>x.type==='D');if(!days.length)days=State.periods.filter(x=>x.type==='W');
@@ -261,11 +335,7 @@ function calcEch(){
   State.c.ech={days:days,mons:mons,tDays:tD,annF:annF,dd:dd,D_ann:D_ann,CVd:CVd,zVal:zV,fgMat:fgMat,fgH:fH,effCap:eC,ps:ps,fgSS:Math.round(zV*CVd*dd)};
 }
 
-function calcLookahead(){if(!State.c.ech)return;var days=State.c.ech.days,plan=new Array(days.length).fill(0),cov=new Array(days.length).fill(false),fH=State.c.ech.fgH;
-for(var di=0;di<days.length;di++){if(cov[di])continue;var dem=gD(days[di]);if(dem<=0){cov[di]=true;continue;}cov[di]=true;var tgt=dem,aH=0,l=1,aC=State.p.adminCost;
-while(di+l<days.length&&l<State.p.shelf){if(cov[di+l]){l++;continue;}var fD=gD(days[di+l]),addH=fD*fH*l;if(aH+addH>=aC)break;tgt+=fD;aH+=addH;cov[di+l]=true;l++;}
-var rem=tgt;for(var k=0;rem>0&&(di+k)<days.length;k++){var c=gC(days[di+k]),av=c-plan[di+k],am=Math.min(rem,av);if(am>0){plan[di+k]+=am;rem-=am;}}}
-State.c.lahPlan=plan;}
+function calcLookahead(){if(!State.c.ech)return;var days=State.c.ech.days;var plan=(State.c.mpsPlan&&State.c.mpsPlan.length===days.length)?State.c.mpsPlan.slice():new Array(days.length).fill(0);State.c.lahPlan=plan;}
 
 function calcModels(){if(!State.c.ech||!State.c.lahPlan)return;
 var days=State.c.ech.days,C=State.c.ech,yF=State.p.yield/100,lM=0.8,hD=State.p.holdStartDay,whC=State.p.whMaxUnits;
@@ -380,7 +450,7 @@ else if(wn.indexOf('Fixed')>=0){rP='(R,S) Periodic Review (3-day)';rW='3-day pro
 else if(wn.indexOf('Greedy')>=0||wn.indexOf('Wagner')>=0){rP='(s,S) Min-Max';rW='Variable batch sizes → flexible ordering.';}
 else if(wn.indexOf('EOQ')>=0){rP='(s,Q) Continuous Review';rW='Fixed-Q production → fixed-Q subpart ordering.';}
 else{rP='(s,S) Min-Max';rW='Dynamic lot-sizing → flexible ordering.';}
-document.getElementById('procRec').innerHTML="<div class='rec-box'><div style='color:var(--ac);font-weight:700;font-size:10px'>🤖 Subpart Procurement Recommendation</div><div style='margin:3px 0'><span style='color:var(--td)'>Production winner (when factory runs):</span> <b style='color:var(--ac)'>"+wn+"</b></div><div style='margin:3px 0'><span style='color:var(--td)'>Matching procurement (when to buy materials):</span> <b style='color:var(--a2)'>"+rP+"</b></div><div style='color:var(--td);font-size:7.5px;margin-top:2px'>"+rW+"</div></div>";
+var mrpTxt='';if(State.c.mrp&&State.c.mrp.parts&&State.c.mrp.parts.length){mrpTxt=State.c.mrp.parts.map(pp=>pp.name+': '+pp.policy.toUpperCase()).join(' | ');}document.getElementById('procRec').innerHTML="<div class='rec-box'><div style='color:var(--ac);font-weight:700;font-size:10px'>🤖 Subpart Procurement Recommendation</div><div style='margin:3px 0'><span style='color:var(--td)'>Production winner (when factory runs):</span> <b style='color:var(--ac)'>"+wn+"</b></div><div style='margin:3px 0'><span style='color:var(--td)'>Matching procurement (when to buy materials):</span> <b style='color:var(--a2)'>"+rP+"</b></div><div style='color:var(--td);font-size:7.5px;margin-top:2px'>"+rW+"</div><div style='color:var(--a3);font-size:7.5px;margin-top:2px'>MRP policy by part: "+(mrpTxt||'n/a')+"</div></div>";
 var pc='';C.ps.forEach((ps,i)=>{var p=State.bom[i];pc+="<div class='gc'><div class='gl' style='color:var(--dg);font-size:9px;font-weight:700'>"+p.name+"</div><div style='display:flex;gap:12px;margin-top:3px'><div><div class='gl'>Q*</div><div class='gv' style='color:var(--ac)'>"+ps.q+"</div></div><div><div class='gl'>ROP</div><div class='gv' style='color:var(--wn)'>"+ps.rop+"</div></div><div><div class='gl'>SS</div><div class='gv' style='color:var(--a3)'>"+ps.ss+"</div></div><div><div class='gl'>Daily</div><div class='gv'>"+ps.dC.toFixed(1)+"</div></div></div></div>";});document.getElementById('partCards').innerHTML=pc;
 
 var tDT=C.days.reduce((s,d)=>s+gD(d),0);
@@ -408,7 +478,7 @@ var mH2='',cB=0,tD2=0,tP2=0;
 if(State.c.lahPlan){var days=C.days,mM={};for(var di=0;di<days.length;di++){var d=days[di],wk=State.periods.find(x=>x.id===d.par),mk=wk?wk.par:'?';if(!mM[mk]){var mp=State.periods.find(x=>x.id===mk);mM[mk]={label:mp?mp.label:(wk?wk.label.split(' ')[0]:'?'),idx:[]};}mM[mk].idx.push(di);}
 Object.keys(mM).forEach(mk=>{var mg=mM[mk],sD=0,sM=0,sH=0,eR=false;mg.idx.forEach(di=>{var dm=gD(days[di]),mp=State.c.lahPlan[di]||0;sD+=dm;sM+=mp;cB+=(mp-dm);if(cB<0)cB=0;sH+=cB*C.fgH;if(cB>State.p.shelf*5)eR=true;});tD2+=sD;tP2+=sM;var nd=sM-sD;
 mH2+='<tr><td style="text-align:left;color:var(--a2)">'+mg.label+'</td><td>'+sD+'</td><td>'+sD+'</td><td style="color:var(--ac);font-weight:700">'+sM+'</td><td style="color:'+(nd>0?'var(--ac)':nd<0?'var(--dg)':'var(--td)')+"'>"+(nd>0?'+':'')+nd+'</td><td style="color:'+(cB>0?'var(--ac)':'var(--td)')+'">'+cB+'</td><td>'+fc(sH)+'</td><td style="color:'+(eR?'var(--dg)':'var(--td)')+"'>"+(eR?'⚠':'—')+'</td></tr>';});
-document.getElementById('milpDebug').innerHTML='Demand: <b>'+tD2+'u</b> | Lookahead: <b>'+tP2+'u</b> | Ratio: <b>'+(tD2>0?(tP2/tD2*100).toFixed(0):'0')+'%</b> (≈100% = demand-matched, >100% = build-ahead buffer)';}
+document.getElementById('milpDebug').innerHTML='Demand: <b>'+tD2+'u</b> | MPS: <b>'+tP2+'u</b> | Ratio: <b>'+(tD2>0?(tP2/tD2*100).toFixed(0):'0')+'%</b> (≈100% = constrained match)';}
 document.getElementById('tMILP').innerHTML=mH2;
 if(State.c.mc){document.getElementById('mcResult').innerHTML="<span class='g'>500 runs</span> | Cost: <span class='v'>"+fc(State.c.mc.cost)+"</span>/yr | Fill: <span class='"+(State.c.mc.fill>95?'g':'r')+"'>"+State.c.mc.fill.toFixed(1)+'%</span>';document.getElementById('mcPath').innerHTML=State.c.mc.path;}}
 

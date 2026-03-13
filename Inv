@@ -102,7 +102,7 @@ select.sku-sel{background:var(--s2);color:var(--tx);border:1px solid var(--br);p
 </div></div>
 <div id="calcHoldInfo" class="debug-box"></div>
 <div style="max-height:220px;overflow-y:auto;border-bottom:1px solid var(--br);margin-bottom:4px">
-<table class="T"><thead><tr><th>Period</th><th>W.Days</th><th>Forecast</th><th style="color:var(--ac)">Actual</th><th>Prod Cap</th></tr></thead><tbody id="tH"></tbody></table>
+<table class="T"><thead><tr><th>Period</th><th>W.Days</th><th>Demand Input</th><th style="color:var(--a3)">Stat Fcst</th><th style="color:var(--ac)">MPS Plan</th><th style="color:var(--ac)">Actual</th><th>Prod Cap</th></tr></thead><tbody id="tH"></tbody></table>
 </div>
 <div class="G4">
 <div class="sr"><div class="sl">MAPE %</div><input type="range" class="si" min="0" max="100" step="1" value="15" oninput="upP('mape',+this.value)"><div class="sv" id="vMape">15%</div></div>
@@ -246,6 +246,22 @@ function distributeForecast(){State.periods.forEach(p=>{if(p.type==='M'){var wks
 function changeHierarchy(m){hierarchyMode=m;buildCal(State);trigger(true,false);}
 
 
+
+function rollupToHierarchy(basePeriods,vals){
+  var byId={};
+  for(var i=0;i<basePeriods.length;i++){
+    var p=basePeriods[i],v=vals[i]||0;
+    byId[p.id]=(byId[p.id]||0)+v;
+    var pid=p.par;
+    while(pid){
+      byId[pid]=(byId[pid]||0)+v;
+      var pp=State.periods.find(x=>x.id===pid);
+      pid=pp?pp.par:null;
+    }
+  }
+  return byId;
+}
+
 function calcForecast(){
   var days=State.periods.filter(x=>x.type==='D');if(!days.length)days=State.periods.filter(x=>x.type==='W');
   if(!days.length){State.c.forecast=[];return;}
@@ -263,6 +279,7 @@ function calcForecast(){
     out.push(pred);
   }
   State.c.forecast=out;
+  State.c.forecastById=rollupToHierarchy(days,out);
 }
 
 function calcMPS(){
@@ -292,6 +309,7 @@ function calcMPS(){
   for(var di=days.length;di>0;di--){var b=prev[di][cur];if(!b)break;plan[di-1]=Math.floor(Math.max(0,b.p)*yF);cur=b.pi;}
   State.c.mpsPlan=plan;
   State.c.mpsCost=best;
+  State.c.mpsById=rollupToHierarchy(days,plan);
 }
 
 function calcMRP(){
@@ -415,7 +433,7 @@ if(r===0){var bk=pr>0&&bl?"<span style='color:var(--a4)'>Partial ("+blockPart+" 
 sP+='<tr><td>'+d.label+'</td><td>'+Math.max(0,dem-bL)+(bL>0?' +'+bL+'bl':'')+'</td><td>'+bk+'</td><td style="color:'+(pr>0?'var(--ac)':'var(--td)')+'">'+pr+'</td><td>'+fN+'</td><td style="color:'+(e2>0?'var(--dg)':'var(--td)')+'">'+e2+'</td><td style="color:'+(rm>0?'var(--dg)':'var(--td)')+'">'+rm+'</td><td>$'+Math.round(tc)+'</td></tr>';}}
 tA+=(tc*C.annF);fA+=(dT>0?(sr/dT)*100:100);}State.c.mc={cost:tA/R,fill:fA/R,path:sP};}
 
-function renderS1(){var h='';State.periods.forEach(p=>{var vis=true;if(p.type==='W'){if(hierarchyMode==='wd')vis=true;else{var pr=State.periods.find(x=>x.id===p.par);vis=pr&&State.exp[pr.id];}}if(p.type==='D'){var pw=State.periods.find(x=>x.id===p.par);if(hierarchyMode==='wd')vis=pw&&State.exp[pw.id];else{var pm=pw?State.periods.find(x=>x.id===pw.par):null;vis=(pw&&State.exp[pw.id])&&(pm&&State.exp[pm.id]);}}if(!vis)return;var pd=p.type==='W'?'padding-left:15px':(p.type==='D'?'padding-left:30px':''),cl=p.type==='M'?'row-m':(p.type==='W'?'row-w':'');var ce=(p.type==='M'&&hierarchyMode!=='wd')||(p.type==='W'&&hierarchyMode!=='mw');var tg=ce?"<span class='tgl' onclick=\"tgl('"+p.id+"')\">"+(State.exp[p.id]?'\u25BC':'\u25B6')+'</span>':'';h+='<tr class="'+cl+'"><td style="'+pd+'">'+tg+p.label+'</td><td>'+(p.type!=='D'?p.wd:'1')+'</td>';h+="<td><input class='e' id='f_"+p.id+"' value='"+p.fcst+"' onchange=\"updatePeriod('"+p.id+"','fcst',this.value)\"></td>";h+="<td><input class='ea' value='"+(p.act!==null?p.act:'')+"' placeholder='—' onchange=\"updatePeriod('"+p.id+"','act',this.value)\"></td>";h+="<td><input class='e' value='"+p.cap+"' onchange=\"updatePeriod('"+p.id+"','cap',this.value)\"></td></tr>";});document.getElementById('tH').innerHTML=h;}
+function renderS1(){var h='';State.periods.forEach(p=>{var vis=true;if(p.type==='W'){if(hierarchyMode==='wd')vis=true;else{var pr=State.periods.find(x=>x.id===p.par);vis=pr&&State.exp[pr.id];}}if(p.type==='D'){var pw=State.periods.find(x=>x.id===p.par);if(hierarchyMode==='wd')vis=pw&&State.exp[pw.id];else{var pm=pw?State.periods.find(x=>x.id===pw.par):null;vis=(pw&&State.exp[pw.id])&&(pm&&State.exp[pm.id]);}}if(!vis)return;var pd=p.type==='W'?'padding-left:15px':(p.type==='D'?'padding-left:30px':''),cl=p.type==='M'?'row-m':(p.type==='W'?'row-w':'');var ce=(p.type==='M'&&hierarchyMode!=='wd')||(p.type==='W'&&hierarchyMode!=='mw');var tg=ce?"<span class='tgl' onclick=\"tgl('"+p.id+"')\">"+(State.exp[p.id]?'▼':'▶')+'</span>':'';h+='<tr class="'+cl+'"><td style="'+pd+'">'+tg+p.label+'</td><td>'+(p.type!=='D'?p.wd:'1')+'</td>';h+="<td><input class='e' id='f_"+p.id+"' value='"+p.fcst+"' onchange=\"updatePeriod('"+p.id+"','fcst',this.value)\"></td>";var sf=(State.c.forecastById&&State.c.forecastById[p.id]!==undefined)?State.c.forecastById[p.id]:'—';var mp=(State.c.mpsById&&State.c.mpsById[p.id]!==undefined)?State.c.mpsById[p.id]:'—';h+="<td style='color:var(--a3);font-weight:700'>"+sf+"</td>";h+="<td style='color:var(--ac);font-weight:700'>"+mp+"</td>";h+="<td><input class='ea' value='"+(p.act!==null?p.act:'')+"' placeholder='—' onchange=\"updatePeriod('"+p.id+"','act',this.value)\"></td>";h+="<td><input class='e' value='"+p.cap+"' onchange=\"updatePeriod('"+p.id+"','cap',this.value)\"></td></tr>";});document.getElementById('tH').innerHTML=h;}
 
 function renderBOM(){var h='<table class="T"><thead><tr><th style="text-align:left">Part</th><th>Qty/FG</th><th>Mode</th><th>Cost$</th><th style="color:var(--a4)">CV%</th><th style="color:var(--a3)">Nxt$</th><th style="color:var(--a3)">ChgDay</th><th>Trans$/u</th><th>LT d</th><th style="color:var(--a4)">LTCV%</th><th>MOQ</th><th>Max</th><th>Hold%/yr</th><th></th></tr></thead><tbody>';
 State.bom.forEach(p=>{var ic=p.mode==='contract';
@@ -478,7 +496,7 @@ var mH2='',cB=0,tD2=0,tP2=0;
 if(State.c.lahPlan){var days=C.days,mM={};for(var di=0;di<days.length;di++){var d=days[di],wk=State.periods.find(x=>x.id===d.par),mk=wk?wk.par:'?';if(!mM[mk]){var mp=State.periods.find(x=>x.id===mk);mM[mk]={label:mp?mp.label:(wk?wk.label.split(' ')[0]:'?'),idx:[]};}mM[mk].idx.push(di);}
 Object.keys(mM).forEach(mk=>{var mg=mM[mk],sD=0,sM=0,sH=0,eR=false;mg.idx.forEach(di=>{var dm=gD(days[di]),mp=State.c.lahPlan[di]||0;sD+=dm;sM+=mp;cB+=(mp-dm);if(cB<0)cB=0;sH+=cB*C.fgH;if(cB>State.p.shelf*5)eR=true;});tD2+=sD;tP2+=sM;var nd=sM-sD;
 mH2+='<tr><td style="text-align:left;color:var(--a2)">'+mg.label+'</td><td>'+sD+'</td><td>'+sD+'</td><td style="color:var(--ac);font-weight:700">'+sM+'</td><td style="color:'+(nd>0?'var(--ac)':nd<0?'var(--dg)':'var(--td)')+"'>"+(nd>0?'+':'')+nd+'</td><td style="color:'+(cB>0?'var(--ac)':'var(--td)')+'">'+cB+'</td><td>'+fc(sH)+'</td><td style="color:'+(eR?'var(--dg)':'var(--td)')+"'>"+(eR?'⚠':'—')+'</td></tr>';});
-document.getElementById('milpDebug').innerHTML='Demand: <b>'+tD2+'u</b> | MPS: <b>'+tP2+'u</b> | Ratio: <b>'+(tD2>0?(tP2/tD2*100).toFixed(0):'0')+'%</b> (≈100% = constrained match)';}
+var mpsCost=(State.c.mpsCost!==undefined&&isFinite(State.c.mpsCost))?fc(State.c.mpsCost):'--';document.getElementById('milpDebug').innerHTML='Demand: <b>'+tD2+'u</b> | MPS: <b>'+tP2+'u</b> | Ratio: <b>'+(tD2>0?(tP2/tD2*100).toFixed(0):'0')+'%</b> (≈100% = constrained match) | MPS Obj: <b>'+mpsCost+'</b>';}
 document.getElementById('tMILP').innerHTML=mH2;
 if(State.c.mc){document.getElementById('mcResult').innerHTML="<span class='g'>500 runs</span> | Cost: <span class='v'>"+fc(State.c.mc.cost)+"</span>/yr | Fill: <span class='"+(State.c.mc.fill>95?'g':'r')+"'>"+State.c.mc.fill.toFixed(1)+'%</span>';document.getElementById('mcPath').innerHTML=State.c.mc.path;}}
 
